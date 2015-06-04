@@ -8,7 +8,7 @@ Tool to access EC2 servers from multiple AWS accounts
 
 ## Requirements
 
-A credentials file  `~/.aws/credentials` in the format explain here: http://boto.readthedocs.org/en/latest/boto_config_tut.html
+A credentials file  `~/.aws/credentials` in the format explained here: http://boto.readthedocs.org/en/latest/boto_config_tut.html
 
 Example configuration (notice the optional `default = True` line):
 ```
