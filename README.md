@@ -33,12 +33,37 @@ If you want to always default to one particular account, set the `default = True
 ## If no default flag has is set this command will list all the accounts for you to choose
 ## If the default is set, it will search for servers in that account
 bash$ jump
++-------+-------------+
+| Index | AWS Account |
++-------+-------------+
+| 0     | dev         |
+| 1     | staging     |
+| 2     | prod        |
++-------+-------------+
+Select an AWS Account:
 
 ## If you have the default flag set, but you want to list and choose another account, use this
 bash$ jump -l
++-------+-------------+
+| Index | AWS Account |
++-------+-------------+
+| 0     | dev         |
+| 1     | staging     |
+| 2     | prod        |
++-------+-------------+
+Select an AWS Account:
 
 ## If you know which account you want, you can specify it like this
-bash$ jump -a prod
+bash$ jump -a dev
++-------+-----+-------------+------------+--------+----------------+---------------+
+| Index | AWS  | Environment | Apps       | Role   | Public         | Private       |
++-------+-----+-------------+------------+--------+----------------+---------------+
+| 1     | dev | dev         | Frontend   | docker | 54.x.x.x       | 10.x.x.x      |
+| 2     | dev | dev         | Backend    | docker | 54.x.x.x       | 10.x.x.x      |
+| 3     | dev | dev         | Database   | docker | 54.x.x.x       | 10.x.x.x      |
++-------+-----+-------------+------------+--------+----------------+---------------+
+
+Enter the server number to SSH to:
 
 ```
 
