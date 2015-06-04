@@ -1,0 +1,197 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import boto.ec2
+from prettytable import PrettyTable
+from optparse import OptionParser
+from os.path import expanduser
+import ConfigParser
+
+
+
+def sshto(target, debug=False):
+    if debug:
+        cmd = "ssh -o StrictHostKeyChecking=no -i ~/.ssh/default.pem ubuntu@%s" % target
+    else:
+        cmd = "ssh -o StrictHostKeyChecking=no %s" % target
+    print "Attempting to SSH to %s" % (target)
+    try:
+        os.system(cmd)
+    except:
+        print "Can't run", cmd
+        exit(3)
+    exit(0)
+
+
+def get_tags(all_tags):
+    tags = {
+        'Apps': '',
+        'Env': '',
+        'Role': ''
+    }
+    for i in all_tags:
+        if str(i) in tags.keys():
+            tags[str(i)] = str(all_tags[i])
+    return tags
+
+
+def get_ec2_servers(profile, region):
+    try:
+        conn = boto.ec2.connect_to_region(region, profile_name=profile)
+    except boto.provider.ProfileNotFoundError:
+        print "\n[ERROR] Invalid account name, use `jump -l` to see valid accounts"
+        sys.exit(1)
+
+    try:
+        instances = conn.get_all_instances(filters={'instance-state-name': 'running'})
+        servers = []
+        for i in instances:
+            d = {}
+            d['tags'] = get_tags(i.instances[0].tags)
+            d['public_dns'] = str(i.instances[0].public_dns_name)
+            d['private_ip'] = str(i.instances[0].private_ip_address)
+            d['public_ip'] = str(i.instances[0].ip_address)
+            d['id'] = str(i.instances[0].id)
+            d['instance_type'] = str(i.instances[0].instance_type)
+            d['AWS'] = profile
+            servers.append(d)
+
+        return servers
+    except AttributeError:
+        return []
+
+
+def display_table(servers, debug=False):
+    """
+    Setup the Pretty Table
+    """
+    headers = ['Index', 'AWS', 'Environment', 'Apps', 'Role',  'Public', 'Private']
+
+    x = PrettyTable(headers)
+    for i in headers:
+        x.align[i] = "l"
+    x.padding_width = 1
+
+    c = 0
+
+    if len(servers) == 0:
+        print "\nNo Servers available in this region"
+        sys.exit()
+
+    for i in servers:
+        try:
+            app = i['tags']['Apps']
+            if len(i['tags']['Apps']) > 40:
+                app = app[0:40] + "..."
+        except KeyError:
+            app = None
+        x.add_row([c,
+                   i['AWS'],
+                   i['tags']['Env'].lower(),
+                   app,
+                   i['tags']['Role'],
+                   i['public_ip'],
+                   i['private_ip']])
+        c += 1
+    print x.get_string(sortby="Environment")
+
+    """
+    Read in the index of the server to connect to.
+    """
+    server = raw_input("\nEnter the server number to SSH to: ")
+    try:
+        server = int(server)
+        sshto(servers[server]['public_ip'], debug)
+    except:
+        print "Exiting: Unknown Input"
+
+
+def list_aws_profile(find_default=False):
+    credentials = "{0}/.aws/credentials".format(expanduser("~"))
+
+    config = ConfigParser.ConfigParser()
+
+    config.read(credentials)
+    profiles = config.sections()
+
+    '''
+    If `default` is set return skip account listing
+    '''
+    if find_default:
+        for i in profiles:
+            try:
+                if config.get(i, 'default'):
+                    return i
+            except ConfigParser.NoOptionError:
+                pass
+    else:
+        headers = ['Index', 'AWS Account']
+
+        x = PrettyTable(headers)
+        for i in headers:
+            x.align[i] = "l"
+        x.padding_width = 1
+
+        for i in xrange(0, len(profiles)):
+            x.add_row([i, profiles[i]])
+
+        print x.get_string()
+        try:
+            profile = profiles[input("Select an AWS Account: ")]
+            return profile
+        except NameError:
+            print "\n[ERROR] Please select the Index value of an AWS account"
+            sys.exit(1)
+        except IndexError:
+            print "\n[ERROR] Please select the Index value of an AWS account"
+            sys.exit(1)
+
+
+def main():
+    parser = OptionParser()
+    parser.add_option('-d', '--debug', dest='debug', action='store_true', default=False,
+                      help='Try to login with the ubuntu user')
+    parser.add_option('-a', '--aws', dest='aws', default=False,
+                      help='Set the AWS account from within the ~/.aws/credentials file')
+    parser.add_option('-l', '--list', dest='list', action='store_true', default=False,
+                      help='List all AWS account from within the ~/.aws/credentials file')
+    parser.add_option('-r', '--region', dest='region', default='eu-west-1',
+                      help='Set the AWS region if different from `eu-west-1`')
+
+    (options, args) = parser.parse_args()
+
+    profile = None
+
+    '''
+    Find default if is exists
+    '''
+    profile = list_aws_profile(True)
+
+    '''
+    List all accounts if the argument is present
+    '''
+    if options.list:
+        profile = list_aws_profile()
+
+    '''
+    If specific AWS account is supplied, use it
+    '''
+    if options.aws:
+        profile = options.aws
+
+    '''
+    If nothing matching, default to listing available accounts
+    '''
+    if profile is None:
+        profile = list_aws_profile()
+
+    '''
+    Display servers and options to connect
+    '''
+    if profile:
+        display_table(get_ec2_servers(profile, options.region), options.debug)
+
+
+if __name__ == "__main__":
+    main()
