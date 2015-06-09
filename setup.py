@@ -5,7 +5,7 @@ setup(
     name="awsjump",
 
     # Version number (initial):
-    version="0.0.2",
+    version="0.0.4",
 
     # Application author details:
     author="Stuart Munro",
