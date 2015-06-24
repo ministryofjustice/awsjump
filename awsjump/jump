@@ -12,9 +12,9 @@ import ConfigParser
 
 def sshto(target, debug=False):
     if debug:
-        cmd = "ssh -o StrictHostKeyChecking=no -i ~/.ssh/default.pem ubuntu@%s" % target
+        cmd = "ssh -i ~/.ssh/default.pem ubuntu@%s" % target
     else:
-        cmd = "ssh -o StrictHostKeyChecking=no %s" % target
+        cmd = "ssh %s" % target
     print "Attempting to SSH to %s" % (target)
     try:
         os.system(cmd)
