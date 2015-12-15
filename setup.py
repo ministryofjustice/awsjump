@@ -5,11 +5,15 @@ setup(
     name="awsjump",
 
     # Version number (initial):
-    version="0.0.4",
+    version="0.0.6",
 
     # Application author details:
     author="Stuart Munro",
     author_email="stuart.munro@digital.justice.gov.uk",
+    
+    # Maintainer details
+    maintainer="Benedetto Lo Giudice",
+    maintainer_email="benedetto.lo-giudice@digital.justice.gov.uk",
 
     # Packages
     packages=["awsjump"],
