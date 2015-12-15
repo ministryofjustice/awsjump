@@ -28,7 +28,8 @@ def get_tags(all_tags):
     tags = {
         'Apps': '',
         'Env': '',
-        'Role': ''
+        'Role': '',
+        'Name': ''
     }
     for i in all_tags:
         if str(i) in tags.keys():
@@ -66,7 +67,7 @@ def display_table(servers, debug=False):
     """
     Setup the Pretty Table
     """
-    headers = ['Index', 'AWS', 'Environment', 'Apps', 'Role',  'Public', 'Private']
+    headers = ['Index', 'AWS', 'Name', 'Environment', 'Apps', 'Role',  'Public', 'Private']
 
     x = PrettyTable(headers)
     for i in headers:
@@ -88,6 +89,7 @@ def display_table(servers, debug=False):
             app = None
         x.add_row([c,
                    i['AWS'],
+                   i['tags']['Name'],
                    i['tags']['Env'].lower(),
                    app,
                    i['tags']['Role'],
